@@ -157,6 +157,7 @@ GCArguments* GCConfig::select_gc() {
     _gc_selected_ergonomically = true;
   }
 
+  /// 确保只选择了一个gc
   if (!is_exactly_one_gc_selected()) {
     // More than one GC selected
     vm_exit_during_initialization("Multiple garbage collectors selected", NULL);

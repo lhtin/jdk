@@ -830,6 +830,7 @@ void os::Bsd::clock_init() {
 
 #ifdef __APPLE__
 
+/// 返回纳秒单位
 jlong os::javaTimeNanos() {
   const uint64_t tm = mach_absolute_time();
   const uint64_t now = (tm * Bsd::_timebase_info.numer) / Bsd::_timebase_info.denom;

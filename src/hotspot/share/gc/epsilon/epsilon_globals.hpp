@@ -79,8 +79,8 @@
   product(size_t, EpsilonTLABDecayTime, 1000, EXPERIMENTAL,                 \
           "TLAB sizing policy decays to initial size after thread had not " \
           "allocated for this long. Time is in milliseconds. Lower value "  \
-          "improves memory footprint, but penalizes actively allocating "   \
-          "threads.")                                                       \
+          "improves memory footprint, but penalizes(影响) actively "         \
+          "allocating threads.")                                            \
           range(1, max_intx)                                                \
                                                                             \
   product(size_t, EpsilonMinHeapExpand, 128 * M, EXPERIMENTAL,              \

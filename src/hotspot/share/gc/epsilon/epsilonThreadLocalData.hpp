@@ -44,6 +44,7 @@ private:
 
 public:
   static void create(Thread* thread) {
+    /// placement new。在new EpsilonThreadLocalData()分配在`data(thread)`返回的内存处
     new (data(thread)) EpsilonThreadLocalData();
   }
 

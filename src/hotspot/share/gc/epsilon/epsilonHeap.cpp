@@ -42,6 +42,7 @@ jint EpsilonHeap::initialize() {
   size_t max_byte_size  = align_up(MaxHeapSize, align);
 
   // Initialize backing storage
+  /// 初始化堆内存
   ReservedHeapSpace heap_rs = Universe::reserve_heap(max_byte_size, align);
   _virtual_space.initialize(heap_rs, init_byte_size);
 
@@ -49,14 +50,14 @@ jint EpsilonHeap::initialize() {
 
   initialize_reserved_region(heap_rs);
 
-  _space = new ContiguousSpace();
+  _space = new ContiguousSpace(); /// 连续空间
   _space->initialize(committed_region, /* clear_space = */ true, /* mangle_space = */ true);
 
   // Precompute hot fields
   _max_tlab_size = MIN2(CollectedHeap::max_tlab_size(), align_object_size(EpsilonMaxTLABSize / HeapWordSize));
   _step_counter_update = MIN2<size_t>(max_byte_size / 16, EpsilonUpdateCountersStep);
   _step_heap_print = (EpsilonPrintHeapSteps == 0) ? SIZE_MAX : (max_byte_size / EpsilonPrintHeapSteps);
-  _decay_time_ns = (int64_t) EpsilonTLABDecayTime * NANOSECS_PER_MILLISEC;
+  _decay_time_ns = (int64_t) EpsilonTLABDecayTime * NANOSECS_PER_MILLISEC; /// 默认1秒
 
   // Enable monitoring
   _monitoring_support = new EpsilonMonitoringSupport(this);
@@ -106,6 +107,7 @@ EpsilonHeap* EpsilonHeap::heap() {
 HeapWord* EpsilonHeap::allocate_work(size_t size) {
   assert(is_object_aligned(size), "Allocation size should be aligned: " SIZE_FORMAT, size);
 
+  ///??? 这里为什么就不需要加锁呢？答：使用了CAS实现无锁
   HeapWord* res = _space->par_allocate(size);
 
   while (res == NULL) {
@@ -177,8 +179,9 @@ HeapWord* EpsilonHeap::allocate_new_tlab(size_t min_size,
       assert(last_time <= time, "time should be monotonic");
 
       // If the thread had not allocated recently, retract the ergonomic size.
-      // This conserves memory when the thread had initial burst of allocations,
-      // and then started allocating only sporadically.
+      // This conserves(节省) memory when the thread had initial burst(爆发) of allocations,
+      // and then started allocating only sporadically(零星).
+      /// 设置为0之后，会导致下面计算出来的size为0
       if (last_time != 0 && (time - last_time > _decay_time_ns)) {
         ergo_tlab = 0;
         EpsilonThreadLocalData::set_ergo_tlab_size(thread, 0);
@@ -202,6 +205,7 @@ HeapWord* EpsilonHeap::allocate_new_tlab(size_t min_size,
   // Check that adjustments did not break local and global invariants
   assert(is_object_aligned(size),
          "Size honors object alignment: " SIZE_FORMAT, size);
+  /// 貌似是多余的？clamp 已经保证了 min_size <= size
   assert(min_size <= size,
          "Size honors min size: "  SIZE_FORMAT " <= " SIZE_FORMAT, min_size, size);
   assert(size <= _max_tlab_size,
@@ -232,6 +236,7 @@ HeapWord* EpsilonHeap::allocate_new_tlab(size_t min_size,
     }
     if (EpsilonElasticTLAB && !fits) {
       // If we requested expansion, this is our new ergonomic TLAB size
+      /// 不一定是变大，有可能是缩小。不过不管是哪个，都需要更新
       EpsilonThreadLocalData::set_ergo_tlab_size(thread, size);
     }
   } else {

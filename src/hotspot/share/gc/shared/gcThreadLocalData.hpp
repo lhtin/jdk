@@ -40,6 +40,7 @@
 // should consider placing frequently accessed fields first in
 // T, so that field offsets relative to Thread are small, which
 // often allows for a more compact instruction encoding.
+/// 可以理解为每个Thread所独享的数据，比如在给Thread分配TLAB时，就可以使用这里面存储的信息做参考
 typedef uint64_t GCThreadLocalData[19]; // 152 bytes
 
 #endif // SHARE_GC_SHARED_GCTHREADLOCALDATA_HPP
