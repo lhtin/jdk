@@ -60,15 +60,22 @@ public:
   // Narrow Oop encoding mode:
   // 0 - Use 32-bits oops without encoding when
   //     NarrowOopHeapBaseMin + heap_size < 4Gb
+  //     不需要encode和decode，因为高32位始终位0，所以32位和64位是等价的
   // 1 - Use zero based compressed oops with encoding when
   //     NarrowOopHeapBaseMin + heap_size < 32Gb
+  //     相当于地址的最后三位省略，这是因为对象是8字节对齐的，最后三位始终为0，所以是可以省略的
+  //     encode: oop >> 3, decode: cOop << 3
   // 2 - Use compressed oops with disjoint heap base if
   //     base is 32G-aligned and base > 0. This allows certain
   //     optimizations in encoding/decoding.
   //     Disjoint: Bits used in base are disjoint from bits used
   //     for oops ==> oop = (cOop << 3) | base.  One can disjoint
   //     the bits of an oop into base and compressed oop.
+  //     因为base是32G对齐，也就意味着在使用32位表示64位地址时，32G之上的位省略了，
+  //     所以在decode的时候通过 | base补回来即可，等价于+ base，但是会更快
+  //     encode: oop >> 3, decode: (cOop << 3) | base
   // 3 - Use compressed oops with heap base + encoding.
+  //     没法做优化，只能老老实实。encode: (oop - base) >> 3, decode: (cOop << 3) + base
   enum Mode {
     UnscaledNarrowOop  = 0,
     ZeroBasedNarrowOop = 1,
