@@ -3630,7 +3630,7 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   // Notify JVMTI agents that VM has started (JNI is up) - nop if no agents.
   JvmtiExport::post_early_vm_start();
 
-  initialize_java_lang_classes(main_thread, CHECK_JNI_ERR);
+  initialize_java_lang_classes(main_thread, CHECK_JNI_ERR); /// 创建新线程
 
   quicken_jni_functions();
 

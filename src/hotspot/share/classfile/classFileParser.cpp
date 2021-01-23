@@ -2356,7 +2356,7 @@ void ClassFileParser::copy_method_annotations(ConstMethod* cm,
 }
 
 
-// Note: the parse_method below is big and clunky because all parsing of the code and exceptions
+// Note: the parse_method below is big and clunky(笨重) because all parsing of the code and exceptions
 // attribute is inlined. This is cumbersome to avoid since we inline most of the parts in the
 // Method* to save footprint, so we only know the size of the resulting Method* when the
 // entire method attribute is parsed.
@@ -2978,7 +2978,7 @@ Method* ClassFileParser::parse_method(const ClassFileStream* const cfs,
 // The promoted_flags parameter is used to pass relevant access_flags
 // from the methods back up to the containing klass. These flag values
 // are added to klass's access_flags.
-// Side-effects: populates the _methods field in the parser
+// Side-effects: populates(填充) the _methods field in the parser
 void ClassFileParser::parse_methods(const ClassFileStream* const cfs,
                                     bool is_interface,
                                     AccessFlags* promoted_flags,
@@ -5482,6 +5482,7 @@ void ClassFileParser::fill_instance_klass(InstanceKlass* ik,
   assert(methods != NULL, "invariant");
   const int methods_len = methods->length();
 
+  /// 确定类中那些方法是固有方法，设置对应的标记
   check_methods_for_intrinsics(ik, methods);
 
   // Fill in field values obtained by parse_classfile_attributes
@@ -5553,7 +5554,7 @@ void ClassFileParser::fill_instance_klass(InstanceKlass* ik,
                                  module_handle,
                                  _protection_domain,
                                  cl_inst_info.class_data(),
-                                 CHECK);
+                                 CHECK); /// 创建类对应的Class实例
 
   assert(_all_mirandas != NULL, "invariant");
 

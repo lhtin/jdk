@@ -743,7 +743,7 @@ size_t os::Posix::default_stack_size(os::ThreadType thr_type) {
 //    |      Normal Stack      | -
 //    |                        |/
 // P2 +------------------------+ Thread::stack_base()
-//
+// ///??? 这里说的P1就是bottom是不是写错了，看逻辑P2才是bottom呀？
 // ** P1 (aka bottom) and size ( P2 = P1 - size) are the address and stack size returned from
 //    pthread_attr_getstack()
 

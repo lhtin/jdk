@@ -74,6 +74,7 @@ class Method : public Metadata {
   // If you add a new field that points to any metaspace object, you
   // must add this field to Method::metaspace_pointers_do().
   ConstMethod*      _constMethod;                // Method read-only data.
+  /// Profiling的数据
   MethodData*       _method_data;
   MethodCounters*   _method_counters;
   AccessFlags       _access_flags;               // Access flags

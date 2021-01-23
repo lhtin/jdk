@@ -990,7 +990,7 @@ void java_lang_Class::create_mirror(Klass* k, Handle class_loader,
   // Class_klass has to be loaded because it is used to allocate
   // the mirror.
   if (SystemDictionary::Class_klass_loaded()) {
-    // Allocate mirror (java.lang.Class instance)
+    // Allocate mirror (java.lang.Class instance) /// Class类的实例
     oop mirror_oop = InstanceMirrorKlass::cast(SystemDictionary::Class_klass())->allocate_instance(k, CHECK);
     Handle mirror(THREAD, mirror_oop);
     Handle comp_mirror;

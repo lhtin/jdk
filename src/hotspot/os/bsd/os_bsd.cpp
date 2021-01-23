@@ -596,6 +596,7 @@ static void *thread_native_entry(Thread *thread) {
     sync->notify_all();
 
     // wait until os::start_thread()
+    /// 等待父线程通知
     while (osthread->get_state() == INITIALIZED) {
       sync->wait_without_safepoint_check();
     }
@@ -675,6 +676,7 @@ bool os::create_thread(Thread* thread, ThreadType thr_type,
     osthread->set_pthread_id(tid);
 
     // Wait until child thread is either initialized or aborted
+    /// 等待创建的子线程初始化完成
     {
       Monitor* sync_with_child = osthread->startThread_lock();
       MutexLocker ml(sync_with_child, Mutex::_no_safepoint_check_flag);

@@ -133,9 +133,11 @@ void FieldLayout::initialize_instance_layout(const InstanceKlass* super_klass) {
     _blocks->set_offset(0);
     _last = _blocks;
     _start = _blocks;
+    /// 头部保留字段
     insert(first_empty_block(), new LayoutRawBlock(LayoutRawBlock::RESERVED, instanceOopDesc::base_offset_in_bytes()));
   } else {
     bool has_fields = reconstruct_layout(super_klass);
+    /// 给还有空隙的添加EMPTY类型的block，方便后续插入进去
     fill_holes(super_klass);
     if ((UseEmptySlotsInSupers && !super_klass->has_contended_annotations()) || !has_fields) {
       _start = _blocks;  // start allocating fields from the first empty block
@@ -179,6 +181,9 @@ void FieldLayout::add(GrowableArray<LayoutRawBlock*>* list, LayoutRawBlock* star
     // check if the previous field had the same requirements and if the search for a fitting slot
     // was successful. If the requirements were the same but the search failed, a new search will
     // fail the same way, so just append the field at the of the layout.
+    /// 优化，如果之前同样的block在前面都没有找到，则直接append到最后
+    ///??? 这里有一个疑问，就是为什么不是>=呢？比如4 size的都放不了，那么8size的肯定也放不了。
+    ///??? 这样的话可以减少比不要的搜索
     else  if (b->size() == last_size && b->alignment() == last_alignment && !last_search_success) {
       candidate = last_block();
     } else {
@@ -282,6 +287,7 @@ void FieldLayout::add_contiguously(GrowableArray<LayoutRawBlock*>* list, LayoutR
 LayoutRawBlock* FieldLayout::insert_field_block(LayoutRawBlock* slot, LayoutRawBlock* block) {
   assert(slot->kind() == LayoutRawBlock::EMPTY, "Blocks can only be inserted in empty blocks");
   if (slot->offset() % block->alignment() != 0) {
+    /// 没有对齐，在前面插入一个empty的的block
     int adjustment = block->alignment() - (slot->offset() % block->alignment());
     LayoutRawBlock* adj = new LayoutRawBlock(LayoutRawBlock::EMPTY, adjustment);
     insert(slot, adj);
@@ -290,6 +296,7 @@ LayoutRawBlock* FieldLayout::insert_field_block(LayoutRawBlock* slot, LayoutRawB
   if (slot->size() == 0) {
     remove(slot);
   }
+  /// 跟block中的位置，设置fields中的offset字段，用于后面的fields添充时使用，最重要的是用于创建示例对象时使用，通过offset访问每个字段的内容
   FieldInfo::from_field_array(_fields, block->field_index())->set_offset(block->offset());
   return block;
 }
@@ -297,7 +304,7 @@ LayoutRawBlock* FieldLayout::insert_field_block(LayoutRawBlock* slot, LayoutRawB
 bool FieldLayout::reconstruct_layout(const InstanceKlass* ik) {
   bool has_instance_fields = false;
   GrowableArray<LayoutRawBlock*>* all_fields = new GrowableArray<LayoutRawBlock*>(32);
-  while (ik != NULL) {
+  while (ik != NULL) { /// 这个地方是否可以优化下？每个class保存跟所有super整合之后内容，这样就不用重复计算了。ps: 按照JDK-8237767的说法，这里故意没做优化，因为性能上没有发现太大的问题
     for (AllFieldStream fs(ik->fields(), ik->constants()); !fs.done(); fs.next()) {
       BasicType type = Signature::basic_type(fs.signature());
       // distinction between static and non-static fields is missing
@@ -306,6 +313,7 @@ bool FieldLayout::reconstruct_layout(const InstanceKlass* ik) {
       int size = type2aelembytes(type);
       // INHERITED blocks are marked as non-reference because oop_maps are handled by their holder class
       LayoutRawBlock* block = new LayoutRawBlock(fs.index(), LayoutRawBlock::INHERITED, size, size, false);
+      /// 这里的offset很关键，后面排序的时候会使用到
       block->set_offset(fs.offset());
       all_fields->append(block);
     }
@@ -531,7 +539,7 @@ FieldGroup* FieldLayoutBuilder::get_or_create_contended_group(int g) {
 void FieldLayoutBuilder::prologue() {
   _layout = new FieldLayout(_fields, _constant_pool);
   const InstanceKlass* super_klass = _super_klass;
-  _layout->initialize_instance_layout(super_klass);
+  _layout->initialize_instance_layout(super_klass); /// 收集父类的fields
   if (super_klass != NULL) {
     _has_nonstatic_fields = super_klass->has_nonstatic_fields();
   }

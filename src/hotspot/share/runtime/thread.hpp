@@ -452,7 +452,7 @@ class Thread: public ThreadShadow {
  protected:
   // To be implemented by children.
   virtual void run() = 0;
-  virtual void pre_run() = 0;
+  virtual void pre_run() = 0; /// 由子类实现
   virtual void post_run() = 0;  // Note: Thread must not be deleted prior to calling this!
 
 #ifdef ASSERT

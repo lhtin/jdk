@@ -486,6 +486,7 @@ InstanceKlass* InstanceKlass::allocate_instance_klass(const ClassFileParser& par
       ik = new (loader_data, size, THREAD) InstanceClassLoaderKlass(parser);
     } else {
       // normal
+      /// 注意重载了new操作符
       ik = new (loader_data, size, THREAD) InstanceKlass(parser, InstanceKlass::_kind_other);
     }
   } else {
@@ -1063,6 +1064,7 @@ void InstanceKlass::initialize_impl(TRAPS) {
   JavaThread* jt = THREAD->as_Java_thread();
 
   // refer to the JVM book page 47 for description of steps
+  /// 注释很老了，新的不一样：https://docs.oracle.com/javase/specs/jvms/se6/html/Concepts.doc.html#19075
   // Step 1
   {
     Handle h_init_lock(THREAD, init_lock());
@@ -1472,6 +1474,7 @@ Method* InstanceKlass::class_initializer() const {
   return NULL;
 }
 
+/// 调用<clinit>类初始化函数
 void InstanceKlass::call_class_initializer(TRAPS) {
   if (ReplayCompiles &&
       (ReplaySuppressInitializers == 1 ||
