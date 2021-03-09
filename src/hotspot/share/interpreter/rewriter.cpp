@@ -557,7 +557,6 @@ void Rewriter::rewrite_bytecodes(TRAPS) {
       THROW_MSG(vmSymbols::java_lang_InternalError(),
                 "This classfile overflows invokespecial for interfaces "
                 "and cannot be loaded");
-      return;
      }
   }
 
