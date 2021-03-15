@@ -766,7 +766,7 @@ InterpreterFrame *InterpreterFrame::build(Method* const method, TRAPS) {
   stack->overflow_check(
     extra_locals + header_words + monitor_words + stack_words, CHECK_NULL);
 
-  // Adjust the caller's stack frame to accomodate any additional
+  // Adjust the caller's stack frame to accommodate any additional
   // local variables we have contiguously with our parameters.
   for (int i = 0; i < extra_locals; i++)
     stack->push(0);
@@ -775,7 +775,7 @@ InterpreterFrame *InterpreterFrame::build(Method* const method, TRAPS) {
   if (method->is_native())
     locals = stack->sp() + (method->size_of_parameters() - 1);
   else
-    locals = stack->sp() + (method->max_locals() - 1);
+    locals = stack->sp() + (method->max_locals() - 1); // 参数和本地变量的起始位置
 
   stack->push(0); // next_frame, filled in later
   intptr_t *fp = stack->sp();

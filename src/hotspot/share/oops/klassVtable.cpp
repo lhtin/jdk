@@ -201,6 +201,7 @@ void klassVtable::initialize_vtable(bool checkconstraints, TRAPS) {
       // update_inherited_vtable can stop for gc - ensure using handles
       methodHandle mh(THREAD, methods->at(i));
 
+      /// 如果方法是static或者private，则不属于vtable
       bool needs_new_entry = update_inherited_vtable(mh, super_vtable_len, -1, checkconstraints, CHECK);
 
       if (needs_new_entry) {
@@ -1244,6 +1245,7 @@ void klassItable::initialize_itable_for_interface(int method_table_offset, Insta
       // of an interface method.
       // Invokespecial does not perform selection based on the receiver, so it does not use
       // the cached itable.
+      /// 先搜索类实现的方法，在搜索类所实现的接口中是否存在对应的默认方法
       target = LinkResolver::lookup_instance_method_in_klasses(_klass, m->name(), m->signature(),
                                                                Klass::PrivateLookupMode::skip, CHECK);
     }
@@ -1295,6 +1297,7 @@ void klassItable::initialize_itable_for_interface(int method_table_offset, Insta
       // ime may have moved during GC so recalculate address
       int ime_num = m->itable_index();
       assert(ime_num < ime_count, "oob");
+      /// 存储类方法到接口方法表中，相当于初始化接口函数表
       itableOffsetEntry::method_entry(_klass, method_table_offset)[ime_num].initialize(target);
       if (log_develop_is_enabled(Trace, itables)) {
         ResourceMark rm(THREAD);
@@ -1438,6 +1441,7 @@ class SetupItableClosure : public InterfaceVisiterClosure  {
 
   itableMethodEntry* method_entry() const { return _method_entry; }
 
+  /// 初始化每个接口相对klass的偏移，以及预留存放接口方法的内存区出来共后面链接阶段填充
   void doit(InstanceKlass* intf, int method_count) {
     int offset = ((address)_method_entry) - _klass_begin;
     _offset_entry->initialize(intf, offset);

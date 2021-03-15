@@ -1,0 +1,3 @@
+- src/hotspot/share/runtime/javaCalls.hpp: C++中调用Java方法
+- src/hotspot/share/prims/jni.cpp
+  - 将C++中的方法注入到Java中，让其可以被Java层调用

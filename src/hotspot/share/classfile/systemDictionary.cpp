@@ -1809,8 +1809,8 @@ InstanceKlass* SystemDictionary::find_class(Symbol* class_name, ClassLoaderData*
 
 
 // ----------------------------------------------------------------------------
-// Update hierachy. This is done before the new klass has been added to the SystemDictionary. The Compile_lock
-// is held, to ensure that the compiler is not using the class hierachy, and that deoptimization will kick in
+// Update hierarchy. This is done before the new klass has been added to the SystemDictionary. The Compile_lock
+// is held, to ensure that the compiler is not using the class hierarchy, and that deoptimization will kick in
 // before a new class is used.
 
 void SystemDictionary::add_to_hierarchy(InstanceKlass* k) {
@@ -2790,6 +2790,7 @@ void SystemDictionary::invoke_bootstrap_method(BootstrapInfo& bootstrap_specifie
   // call condy: java.lang.invoke.MethodHandleNatives::linkDynamicConstant(caller, condy_index, bsm, type, info)
   //       indy: java.lang.invoke.MethodHandleNatives::linkCallSite(caller, indy_index, bsm, name, mtype, info, &appendix)
   JavaCallArguments args;
+  /// 前面5个是固定参数，后面1个是自定义参数
   args.push_oop(Handle(THREAD, bootstrap_specifier.caller_mirror()));
   args.push_int(bootstrap_specifier.bss_index());
   args.push_oop(bootstrap_specifier.bsm());
@@ -2800,6 +2801,7 @@ void SystemDictionary::invoke_bootstrap_method(BootstrapInfo& bootstrap_specifie
     args.push_oop(appendix_box);
   }
   JavaValue result(T_OBJECT);
+  /// 调用java_lang_invoke_MethodHandleNatives.linkCallSite，生成CallSite
   JavaCalls::call_static(&result,
                          SystemDictionary::MethodHandleNatives_klass(),
                          is_indy ? vmSymbols::linkCallSite_name() : vmSymbols::linkDynamicConstant_name(),

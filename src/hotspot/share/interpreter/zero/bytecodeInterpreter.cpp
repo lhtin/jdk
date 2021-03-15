@@ -1591,6 +1591,7 @@ run:
 
           cache = cp->entry_at(index);
           if (!cache->is_resolved((Bytecodes::Code)opcode)) {
+            /// 解析字节码和操作数，比如将class字符确定为对象的klass对象，将字段名称解析为oop中的索引
             CALL_VM(InterpreterRuntime::resolve_from_cache(THREAD, (Bytecodes::Code)opcode),
                     handle_exception);
             cache = cp->entry_at(index);
@@ -1618,11 +1619,14 @@ run:
 
           oop obj;
           if ((Bytecodes::Code)opcode == Bytecodes::_getstatic) {
+            /// 如果是静态字段，则取出class部分
             Klass* k = cache->f1_as_klass();
+            /// 静态字段从_java_mirror中去
             obj = k->java_mirror();
+            /// 目的是为了将后面取出的字段值存放在栈顶
             MORE_STACK(1);  // Assume single slot push
           } else {
-            obj = (oop) STACK_OBJECT(-1);
+            obj = (oop) STACK_OBJECT(-1); /// 后续会将该位置覆盖为实例字段值
             CHECK_NULL(obj);
           }
 
@@ -1630,6 +1634,7 @@ run:
           // Now store the result on the stack
           //
           TosState tos_type = cache->flag_state();
+          // 取出字段相对oop对象偏移量
           int field_offset = cache->f2_as_index();
           if (cache->is_volatile()) {
             if (support_IRIW_for_not_multiple_copy_atomic_cpu) {
@@ -1642,6 +1647,7 @@ run:
               SET_STACK_INT(obj->int_field_acquire(field_offset), -1);
             } else if (tos_type == ltos) {
               SET_STACK_LONG(obj->long_field_acquire(field_offset), 0);
+              /// long类型和下面的double类型占用两个slot
               MORE_STACK(1);
             } else if (tos_type == btos || tos_type == ztos) {
               SET_STACK_INT(obj->byte_field_acquire(field_offset), -1);
@@ -1810,6 +1816,7 @@ run:
               // Initialize object (if nonzero size and need) and then the header.
               // If the TLAB isn't pre-zeroed then we'll have to do it.
               if (!ZeroTLAB) {
+                // 如果TLAB之前没有被初始化为0，则需要对分配的实例进行初始化
                 HeapWord* to_zero = cast_from_oop<HeapWord*>(result) + sizeof(oopDesc) / oopSize;
                 obj_size -= sizeof(oopDesc) / oopSize;
                 if (obj_size > 0 ) {
@@ -2185,16 +2192,19 @@ run:
 
         // this could definitely be cleaned up QQQ
         Method *interface_method = cache->f2_as_interface_method();
+        /// 方法所在的接口
         InstanceKlass* iclass = interface_method->method_holder();
 
         // get receiver
         int parms = cache->parameter_size();
         oop rcvr = STACK_OBJECT(-parms);
         CHECK_NULL(rcvr);
+        /// 实例对象对应的Klass
         InstanceKlass* int2 = (InstanceKlass*) rcvr->klass();
 
         // Receiver subtype check against resolved interface klass (REFC).
         {
+          /// 检查声明变量所使用的接口类型是否被类实现了
           Klass* refc = cache->f1_as_klass();
           itableOffsetEntry* scan;
           for (scan = (itableOffsetEntry*) int2->start_of_itable();
@@ -2213,6 +2223,7 @@ run:
           }
         }
 
+        /// 寻找到方法所在接口的itable
         itableOffsetEntry* ki = (itableOffsetEntry*) int2->start_of_itable();
         int i;
         for ( i = 0 ; i < int2->itable_length() ; i++, ki++ ) {
@@ -2227,6 +2238,7 @@ run:
         }
         int mindex = interface_method->itable_index();
 
+        /// 获取接口下的method表
         itableMethodEntry* im = ki->first_method_entry(rcvr->klass());
         callee = im[mindex].method();
         if (callee == NULL) {
@@ -2240,7 +2252,7 @@ run:
           istate->set_callee_entry_point(callee->interpreter_entry());
         }
         istate->set_bcp_advance(5);
-        UPDATE_PC_AND_RETURN(0); // I'll be back...
+        UPDATE_PC_AND_RETURN(0); // I'linvokedynamicl be back...
       }
 
       CASE(_invokevirtual):
@@ -2253,15 +2265,18 @@ run:
         // out so c++ compiler has a chance for constant prop to fold everything possible away.
 
         if (!cache->is_resolved((Bytecodes::Code)opcode)) {
+          /// 确定指令所使用的类、方法等
           CALL_VM(InterpreterRuntime::resolve_from_cache(THREAD, (Bytecodes::Code)opcode),
                   handle_exception);
           cache = cp->entry_at(index);
         }
 
+        /// 设置下一步处理的消息类型
         istate->set_msg(call_method);
         {
           Method* callee;
           if ((Bytecodes::Code)opcode == Bytecodes::_invokevirtual) {
+            /// 如果是实例方法调用，需要查虚函数表
             CHECK_NULL(STACK_OBJECT(-(cache->parameter_size())));
             if (cache->is_vfinal()) {
               callee = cache->f2_as_vfinal_method();
@@ -2303,11 +2318,13 @@ run:
           }
 
           istate->set_callee(callee);
+          /// 设置方法入口
           istate->set_callee_entry_point(callee->from_interpreted_entry());
           if (JVMTI_ENABLED && THREAD->is_interp_only_mode()) {
             istate->set_callee_entry_point(callee->interpreter_entry());
           }
           istate->set_bcp_advance(3);
+          /// 退出run方法，进入main_loop然后判断msg，为call_method则去执行对应的方法
           UPDATE_PC_AND_RETURN(0); // I'll be back...
         }
       }

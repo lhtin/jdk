@@ -1222,7 +1222,7 @@ public:
   oop init_lock() const;
 private:
   void fence_and_clear_init_lock();
-
+  /// 链接，包括初始化接口表
   bool link_class_impl                           (TRAPS);
   bool verify_code                               (TRAPS);
   void initialize_impl                           (TRAPS);

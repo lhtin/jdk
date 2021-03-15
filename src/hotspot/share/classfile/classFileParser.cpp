@@ -339,6 +339,7 @@ void ClassFileParser::parse_constant_pool_entries(const ClassFileStream* const s
                                                         utf8_length,
                                                         hash);
         if (result == NULL) {
+          /// 批量创建Symbol
           names[names_count] = (const char*)utf8_buffer;
           lengths[names_count] = utf8_length;
           indices[names_count] = index;
@@ -444,6 +445,7 @@ void ClassFileParser::parse_constant_pool(const ClassFileStream* const stream,
 
   // first verification pass - validate cross references
   // and fixup class and string constants
+  // 修改string和class
   for (index = 1; index < length; index++) {          // Index 0 is unused
     const jbyte tag = cp->tag_at(index).value();
     switch (tag) {
@@ -505,7 +507,7 @@ void ClassFileParser::parse_constant_pool(const ClassFileStream* const stream,
         break;
       }
       case JVM_CONSTANT_ClassIndex: {
-        const int class_index = cp->klass_index_at(index);
+        const int class_index = cp->klass_index_at(index); /// 只有2位低字节有效
         check_property(valid_symbol_at(class_index),
           "Invalid constant pool index %u in class file %s",
           class_index, CHECK);
@@ -5560,6 +5562,7 @@ void ClassFileParser::fill_instance_klass(InstanceKlass* ik,
 
   // Generate any default methods - default methods are public interface methods
   // that have a default implementation.  This is new with Java 8.
+  /// 收集接口中的默认方法
   if (_has_nonstatic_concrete_methods) {
     DefaultMethods::generate_default_methods(ik,
                                              _all_mirandas,
@@ -6238,6 +6241,7 @@ void ClassFileParser::post_process_parsed_stream(const ClassFileStream* const st
   }
 
   // Compute the transitive list of all unique interfaces implemented by this class
+  /// 计算类所实现的所有的接口（包括父类实现的接口和接口继承的接口）
   _transitive_interfaces =
     compute_transitive_interfaces(_super_klass,
                                   _local_interfaces,
@@ -6252,6 +6256,7 @@ void ClassFileParser::post_process_parsed_stream(const ClassFileStream* const st
   _all_mirandas = new GrowableArray<Method*>(20);
 
   Handle loader(THREAD, _loader_data->class_loader());
+  /// 计算vtable_size的大小（包括未实现的接口中方法，即所谓的miranda method）
   klassVtable::compute_vtable_size_and_num_mirandas(&_vtable_size,
                                                     &_num_miranda_methods,
                                                     _all_mirandas,

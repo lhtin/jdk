@@ -46,15 +46,17 @@ class PSPromotionManager;
 // the entry layout is shared and looks as follows:
 //
 // bit number |31                0|
-// bit length |-8--|-8--|---16----|
+// bit length |-8--|-8--|---16----| 表示分成了8、8、16三部分
 // --------------------------------
 // _indices   [ b2 | b1 |  index  ]  index = constant_pool_index
 // _f1        [  entry specific   ]  metadata ptr (method or klass)
 // _f2        [  entry specific   ]  vtable or res_ref index, or vfinal method ptr
+
 // _flags     [tos|0|F=1|0|0|0|f|v|0 |0000|field_index] (for field entries)
-// bit length [ 4 |1| 1 |1|1|1|1|1|1 |1     |-3-|----16-----]
+// bit length [ 4 |1| 1 |1|1|1|1|1|1 |-4--|----16-----]
+
 // _flags     [tos|0|F=0|S|A|I|f|0|vf|indy_rf|000|00000|psize] (for method entries)
-// bit length [ 4 |1| 1 |1|1|1|1|1|1 |-4--|--8--|--8--]
+// bit length [ 4 |1| 1 |1|1|1|1|1|1 |---1---|-3-|--5--|--8--]
 
 // --------------------------------
 //

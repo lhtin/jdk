@@ -232,7 +232,7 @@ void CallInfo::print() {
 
 LinkInfo::LinkInfo(const constantPoolHandle& pool, int index, const methodHandle& current_method, TRAPS) {
    // resolve klass
-  _resolved_klass = pool->klass_ref_at(index, CHECK);
+  _resolved_klass = pool->klass_ref_at(index, CHECK); /// 加载类
 
   // Get name, signature, and static klass
   _name          = pool->name_ref_at(index);
@@ -334,6 +334,7 @@ Method* LinkResolver::lookup_method_in_klasses(const LinkInfo& link_info,
   Symbol* signature = link_info.signature();
 
   // Ignore overpasses so statics can be found during resolution
+  /// 从当前类开始，递归往父类上寻找
   Method* result = klass->uncached_lookup_method(name, signature, Klass::OverpassLookupMode::skip);
 
   if (klass->is_array_klass()) {

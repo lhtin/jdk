@@ -523,6 +523,8 @@ void Rewriter::rewrite_bytecodes(TRAPS) {
   assert(_pool->cache() == NULL, "constant pool cache must not be set yet");
 
   // determine index maps for Method* rewriting
+  // 遍历常量池，收集Fieldref、Methodref、InterfaceMethodref
+  // Dynamic、String、MethodHandle、MethodType
   compute_index_maps();
 
   if (RegisterFinalizersAtInit && _klass->name() == vmSymbols::java_lang_Object()) {
@@ -592,7 +594,7 @@ Rewriter::Rewriter(InstanceKlass* klass, const constantPoolHandle& cpool, Array<
   rewrite_bytecodes(CHECK);
 
   // Stress restoring bytecodes
-  if (StressRewriter) {
+  if (StressRewriter) { /// 再重写一遍，强校验
     restore_bytecodes(THREAD);
     rewrite_bytecodes(CHECK);
   }

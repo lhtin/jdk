@@ -704,7 +704,7 @@ void InterpreterRuntime::resolve_get_put(JavaThread* thread, Bytecodes::Code byt
     put_code,
     info.field_holder(),
     info.index(),
-    info.offset(),
+    info.offset(), /// 在解析class文件时，已经计算好了每个field的偏移值
     state,
     info.access_flags().is_final(),
     info.access_flags().is_volatile(),
@@ -808,6 +808,7 @@ void InterpreterRuntime::resolve_invoke(JavaThread* thread, Bytecodes::Code byte
     methodHandle m (thread, last_frame.method());
     Bytecode_invoke call(m, last_frame.bci());
     Symbol* signature = call.signature();
+    /// 表示即将调用方法的真实所有者，即this对象
     receiver = Handle(thread, last_frame.callee_receiver(signature));
 
     assert(Universe::heap()->is_in_or_null(receiver()),

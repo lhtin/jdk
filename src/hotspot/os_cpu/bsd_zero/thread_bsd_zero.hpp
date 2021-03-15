@@ -44,7 +44,7 @@
     return _top_zero_frame;
   }
   void push_zero_frame(ZeroFrame *frame) {
-    *(ZeroFrame **) frame = _top_zero_frame;
+    *(ZeroFrame **) frame = _top_zero_frame; ///!!! 这里设置next_frame，代码有点难懂
     _top_zero_frame = frame;
   }
   void pop_zero_frame() {

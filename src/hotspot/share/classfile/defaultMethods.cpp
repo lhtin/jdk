@@ -918,6 +918,7 @@ static void switchover_constant_pool(BytecodeConstantPool* bpool,
     InstanceKlass* klass, GrowableArray<Method*>* new_methods, TRAPS) {
 
   if (new_methods->length() > 0) {
+    /// 更换成新的ConstantPool，如果有新的class constant
     ConstantPool* cp = bpool->create_constant_pool(CHECK);
     if (cp != klass->constants()) {
       // Copy resolved anonymous class into new constant pool.

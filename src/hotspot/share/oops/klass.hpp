@@ -52,7 +52,7 @@ const uint KLASS_ID_COUNT = 6;
 
 //
 // A Klass provides:
-//  1: language level class object (method dictionary etc.)
+//  1: language level class object (method dictionary etc.) 也就是说表示Java语言层面的类表示
 //  2: provide vm dispatch behavior for the object
 // Both functions are combined into one C++ class.
 

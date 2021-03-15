@@ -486,7 +486,8 @@ InstanceKlass* InstanceKlass::allocate_instance_klass(const ClassFileParser& par
       ik = new (loader_data, size, THREAD) InstanceClassLoaderKlass(parser);
     } else {
       // normal
-      /// 注意重载了new操作符
+      /// 注意重载了 C++ 中的new操作符
+      /// 因为这里不只需要实例化InstanceKlass类，还要在实例相邻内存申请存储虚函数表、接口函数表等内存
       ik = new (loader_data, size, THREAD) InstanceKlass(parser, InstanceKlass::_kind_other);
     }
   } else {
@@ -1168,6 +1169,7 @@ void InstanceKlass::initialize_impl(TRAPS) {
       if (UsePerfData) {
         ClassLoader::perf_classes_inited()->inc();
       }
+      ///??? 为什么这里还要调用<cinit>，不是为null了吗？
       call_class_initializer(THREAD);
     }
   }
@@ -1876,6 +1878,8 @@ static bool method_matches(const Method* m,
                            bool skipping_private) {
   return ((m->signature() == signature) &&
     (!skipping_overpass || !m->is_overpass()) &&
+    /// 如果为skip static，则m不能为static
+    /// (!skipping_static || (skipping_static && !m->is_static())
     (!skipping_static || !m->is_static()) &&
     (!skipping_private || !m->is_private()));
 }
@@ -1912,8 +1916,10 @@ int InstanceKlass::find_method_index(const Array<Method*>* methods,
     }
 
     // search downwards through overloaded methods
+    /// 如果有对方法进行重载，则需要
     int i;
-    for (i = hit - 1; i >= 0; --i) {
+    if (!_disable_method_binary_search) {
+      for (i = hit - 1; i >= 0; --i) {
         const Method* const m = methods->at(i);
         assert(m->is_method(), "must be method");
         if (m->name() != name) {
@@ -1922,6 +1928,7 @@ int InstanceKlass::find_method_index(const Array<Method*>* methods,
         if (method_matches(m, signature, skipping_overpass, skipping_static, skipping_private)) {
           return i;
         }
+      }
     }
     // search upwards
     for (i = hit + 1; i < methods->length(); ++i) {

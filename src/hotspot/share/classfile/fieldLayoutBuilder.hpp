@@ -237,7 +237,7 @@ class FieldLayoutBuilder : public ResourceObj {
   FieldGroup* _static_fields;
   FieldLayout* _layout;
   FieldLayout* _static_layout;
-  int _nonstatic_oopmap_count;
+  int _nonstatic_oopmap_count; /// 存储非静态、字段类型为Object或者Array的字段
   int _alignment;
   bool _has_nonstatic_fields;
   bool _is_contended; // is a contended class?

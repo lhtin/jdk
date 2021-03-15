@@ -323,7 +323,7 @@ static void ParkEventLoop() {
 }
 
 /*
- * Mac OS X mandates that the GUI event loop run on very first thread of
+ * Mac OS X mandates(要求) that the GUI event loop run on very first thread of
  * an application. This requires that we re-call Java's main() on a new
  * thread, reserving the 'main' thread for Cocoa.
  */

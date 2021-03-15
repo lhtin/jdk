@@ -55,6 +55,7 @@ ConstantPool* BytecodeConstantPool::create_constant_pool(TRAPS) const {
 
   cp->set_pool_holder(_orig->pool_holder());
   constantPoolHandle cp_h(THREAD, cp);
+  /// 复制的时候会将resolved class还原
   _orig->copy_cp_to(1, _orig->length() - 1, cp_h, 1, CHECK_NULL);
 
   // Preserve dynamic constant information from the original pool

@@ -191,6 +191,7 @@ void ConstantPool::initialize_resolved_references(ClassLoaderData* loader_data,
         assert(x == (int)(jushort) x, "klass index is too big");
         om->at_put(i, (jushort)x);
       }
+      /// 将收集resolved映射存储到ConstantPoolCache中
       set_reference_map(om);
     }
 
@@ -198,6 +199,7 @@ void ConstantPool::initialize_resolved_references(ClassLoaderData* loader_data,
     // methodTypes, invokedynamic and invokehandle appendix objects, etc.
     objArrayOop stom = oopFactory::new_objArray(SystemDictionary::Object_klass(), map_length, CHECK);
     Handle refs_handle (THREAD, (oop)stom);  // must handleize.
+    /// 将收集到的resolved refs存储到ConstantPoolCache
     set_resolved_references(loader_data->add_handle(refs_handle));
   }
 }
@@ -553,7 +555,7 @@ Klass* ConstantPool::klass_at_impl(const constantPoolHandle& this_cp, int which,
     trace_class_resolution(this_cp, k);
   }
   Klass** adr = this_cp->resolved_klasses()->adr_at(resolved_klass_index);
-  Atomic::release_store(adr, k);
+  Atomic::release_store(adr, k); ///!!! 保存resolved后的klass地址
   // The interpreter assumes when the tag is stored, the klass is resolved
   // and the Klass* stored in _resolved_klasses is non-NULL, so we need
   // hardware store ordering here.
@@ -691,6 +693,7 @@ int ConstantPool::impl_klass_ref_index_at(int which, bool uncached) {
   guarantee(!ConstantPool::is_invokedynamic_index(which),
             "an invokedynamic instruction does not have a klass");
   int i = which;
+  /// 需要做这个条件判断是因为link阶段修改了bytecode，将index改成了ConstantPoolCache中的index
   if (!uncached && cache() != NULL) {
     // change byte-ordering and go via cache
     i = remap_instruction_operand_from_cache(which);
@@ -895,6 +898,7 @@ oop ConstantPool::resolve_constant_at_impl(const constantPoolHandle& this_cp,
   if (cache_index >= 0) {
     result_oop = this_cp->resolved_references()->obj_at(cache_index);
     if (result_oop != NULL) {
+      /// 已存在
       if (result_oop == Universe::the_null_sentinel()) {
         DEBUG_ONLY(int temp_index = (index >= 0 ? index : this_cp->object_to_cp_index(cache_index)));
         assert(this_cp->tag_at(temp_index).is_dynamic_constant(), "only condy uses the null sentinel");
@@ -1120,6 +1124,7 @@ oop ConstantPool::resolve_constant_at_impl(const constantPoolHandle& this_cp,
     // It doesn't matter which racing thread wins, as long as only one
     // result is used by all threads, and all future queries.
     oop new_result = (result_oop == NULL ? Universe::the_null_sentinel() : result_oop);
+    /// 存储加载好的内容
     oop old_result = this_cp->resolved_references()
       ->atomic_compare_exchange_oop(cache_index, new_result, NULL);
     if (old_result == NULL) {
