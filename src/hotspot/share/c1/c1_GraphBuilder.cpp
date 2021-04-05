@@ -2653,7 +2653,6 @@ BlockEnd* GraphBuilder::iterate_bytecodes_for_block(int bci) {
   CompileLog* log = compilation()->log();
   ciBytecodeStream s(method());
   s.reset_to_bci(bci);
-  int prev_bci = bci;
   scope_data()->set_stream(&s);
   // iterate
   Bytecodes::Code code = Bytecodes::_illegal;
@@ -2897,10 +2896,6 @@ BlockEnd* GraphBuilder::iterate_bytecodes_for_block(int bci) {
 
     if (log != NULL)
       log->clear_context(); // skip marker if nothing was printed
-
-    // save current bci to setup Goto at the end
-    prev_bci = s.cur_bci();
-
   }
   CHECK_BAILOUT_(NULL);
   // stop processing of this block (see try_inline_full)
